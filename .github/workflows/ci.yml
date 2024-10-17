@@ -1,0 +1,300 @@
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: Copyright 2024 Ian McIntyre
+
+name: Continuous integration and package release
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: An already-pushed, annotated git tag
+        required: true
+        type: string
+
+jobs:
+  msrv:
+    name: Check the MSRV with its locked dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      matrix:
+        target:
+        - x86_64-unknown-linux-gnu
+        - thumbv7em-none-eabi
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+        ref: ${{ inputs.tag || github.ref }}
+    - name: Find the rust-version in Cargo.toml
+      run: echo "libthreadx_sys_rust_version=$(cargo metadata --format-version=1 --no-deps | jq -r '.packages[] | select(.name=="libthreadx-sys").rust_version')" >> $GITHUB_ENV
+    - name: Install a stable toolchain and the MSRV toolchain
+      run: rustup toolchain install stable $libthreadx_sys_rust_version --no-self-update --profile minimal --target ${{ matrix.target }}
+    - name: Install other dependencies
+      run: sudo apt-get update && sudo apt-get install qemu-system-arm gcc-arm-none-eabi
+    - name: Reveal locked dependencies
+      run: cargo +$libthreadx_sys_rust_version tree --edges=no-dev --target ${{ matrix.target }}
+    - name: Can we build / run the example with the MSRV?
+      run: cargo +$libthreadx_sys_rust_version run --example=demo_threadx --release --target ${{ matrix.target }}
+    - name: Update dependencies to their latest versions
+      run: cargo +$libthreadx_sys_rust_version update && cargo +$libthreadx_sys_rust_version tree --edges=no-dev --target ${{ matrix.target }}
+    - name: Does the MSRV work with these updated dependencies?
+      run: cargo +$libthreadx_sys_rust_version run --example=demo_threadx --release --target ${{ matrix.target }}
+      # Just a hint to maintainers / users. If newer dependencies don't work
+      # with the MSRV, Cargo.lock already has versions that will work with
+      # the MSRV. Users can lock dependencies accordingly.
+      continue-on-error: true
+    - name: Does a stable toolchain work with these updated dependencies?
+      run: cargo +stable run --example=demo_threadx --release --target ${{ matrix.target }}
+      # If not, we should expect a fix somwhere.
+      continue-on-error: true
+
+  host-win32:
+    name: Run the example on Windows
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+        ref: ${{ inputs.tag || github.ref }}
+    - run: rustup toolchain install stable --no-self-update --profile minimal
+    - run: cargo build --example=demo_threadx
+    - run: cargo run --example=demo_threadx
+      # Windows doesn't run the example.
+      # I haven't had the chance or tools to debug it.
+      continue-on-error: true
+  
+  host-linux:
+    name: Run the example and tests on Linux
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+        ref: ${{ inputs.tag || github.ref }}
+    - run: rustup toolchain install stable --no-self-update --profile minimal
+    - run: cargo fmt --check
+    - run: cargo test
+    - run: cargo run --example=demo_threadx
+    - run: cargo run --example=demo_threadx
+      env:
+        RUSTFLAGS: >
+          --cfg tx_block_pool_enable_performance_info
+          --cfg tx_byte_pool_enable_performance_info
+          --cfg tx_event_flags_enable_performance_info
+          --cfg tx_mutex_enable_performance_info
+          --cfg tx_queue_enable_performance_info
+          --cfg tx_semaphore_enable_performance_info
+          --cfg tx_thread_enable_performance_info
+          --cfg tx_timer_enable_performance_info
+    - run: cargo run --example=demo_threadx
+      env:
+        RUSTFLAGS: >
+          --cfg tx_disable_notify_callbacks
+
+  qemu-arm:
+    name: Run examples in QEMU (ARM)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      matrix:
+        target:
+        - thumbv6m-none-eabi
+        - thumbv7m-none-eabi
+        - thumbv7em-none-eabi
+        - thumbv7em-none-eabihf
+        - thumbv8m.base-none-eabi
+        - thumbv8m.main-none-eabi
+        - thumbv8m.main-none-eabihf
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+        ref: ${{ inputs.tag || github.ref }}
+    - run: rustup toolchain install stable --no-self-update --profile minimal --target ${{ matrix.target }}
+    - run: sudo apt-get update && sudo apt-get install qemu-system-arm gcc-arm-none-eabi
+    - run: cargo run --example=demo_threadx --target=${{ matrix.target }} --release
+    - run: cargo run --example=demo_threadx --target=${{ matrix.target }} --release
+      env:
+        RUSTFLAGS: >
+          -C link-arg=-Tlink.x
+          --cfg tx_block_pool_enable_performance_info
+          --cfg tx_byte_pool_enable_performance_info
+          --cfg tx_event_flags_enable_performance_info
+          --cfg tx_mutex_enable_performance_info
+          --cfg tx_queue_enable_performance_info
+          --cfg tx_semaphore_enable_performance_info
+          --cfg tx_thread_enable_performance_info
+          --cfg tx_timer_enable_performance_info
+    - run: cargo run --example=demo_threadx --target=${{ matrix.target }} --release
+      env:
+        RUSTFLAGS: >
+          -C link-arg=-Tlink.x
+          --cfg tx_disable_notify_callbacks
+
+  check-docs-rs:
+    name: Simulate docs.rs builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      matrix:
+        target:
+        - x86_64-unknown-linux-gnu
+        - thumbv6m-none-eabi
+        - thumbv7m-none-eabi
+        - thumbv7em-none-eabi
+        - thumbv7em-none-eabihf
+        - thumbv8m.base-none-eabi
+        - thumbv8m.main-none-eabi
+        - thumbv8m.main-none-eabihf
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+        ref: ${{ inputs.tag || github.ref }}
+    - run: rustup toolchain install nightly --no-self-update --profile minimal --target ${{ matrix.target }}
+    - run: cargo +nightly rustdoc
+      env:
+        DOCS_RS:
+
+  create-source-package:
+    name: Create the source package
+    needs:
+    - msrv
+    - host-win32
+    - host-linux
+    - qemu-arm
+    - check-docs-rs
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+        ref: ${{ inputs.tag || github.ref }}
+    - run: >
+        rustup toolchain install stable --no-self-update --profile minimal
+        --target=x86_64-unknown-linux-gnu
+        --target=thumbv6m-none-eabi
+        --target=thumbv7m-none-eabi
+        --target=thumbv7em-none-eabi
+        --target=thumbv7em-none-eabihf
+        --target=thumbv8m.base-none-eabi
+        --target=thumbv8m.main-none-eabi
+        --target=thumbv8m.main-none-eabihf
+    - run: sudo apt-get update && sudo apt-get install gcc-arm-none-eabi
+    - run: >
+        cargo package
+        --target=x86_64-unknown-linux-gnu
+        --target=thumbv6m-none-eabi
+        --target=thumbv7m-none-eabi
+        --target=thumbv7em-none-eabi
+        --target=thumbv7em-none-eabihf
+        --target=thumbv8m.base-none-eabi
+        --target=thumbv8m.main-none-eabi
+        --target=thumbv8m.main-none-eabihf
+    - run: mv target/package/libthreadx-sys-*.crate libthreadx-sys.crate
+    - uses: actions/upload-artifact@v4
+      with:
+        name: libthreadx-sys-crate
+        path: libthreadx-sys.crate
+        if-no-files-found: error
+        retention-days: 1
+
+  create-libthreadx-archives:
+    name: Build ThreadX for supported targets
+    needs:
+    - msrv
+    - host-win32
+    - host-linux
+    - qemu-arm
+    - check-docs-rs
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      matrix:
+        target:
+        - x86_64-unknown-linux-gnu
+        - thumbv6m-none-eabi
+        - thumbv7m-none-eabi
+        - thumbv7em-none-eabi
+        - thumbv7em-none-eabihf
+        - thumbv8m.base-none-eabi
+        - thumbv8m.main-none-eabi
+        - thumbv8m.main-none-eabihf
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+        ref: ${{ inputs.tag || github.ref }}
+    - run: rustup toolchain install stable --no-self-update --profile minimal --target ${{ matrix.target }}
+    - run: sudo apt-get update && sudo apt-get install gcc-arm-none-eabi
+    - run: cargo build --release --target=${{ matrix.target }}
+    - run: mv target/${{ matrix.target }}/release/build/libthreadx-sys-*/out/libthreadx.a libthreadx-${{ matrix.target }}.a
+    - uses: actions/upload-artifact@v4
+      with:
+        name: libthreadx-${{ matrix.target }}
+        path: libthreadx-${{ matrix.target }}.a
+        if-no-files-found: error
+        retention-days: 1
+
+  test-source-package:
+    name: Check source packages and pre-built archives
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs:
+    - create-source-package
+    - create-libthreadx-archives
+    strategy:
+      matrix:
+        target:
+        - x86_64-unknown-linux-gnu
+        - thumbv6m-none-eabi
+        - thumbv7m-none-eabi
+        - thumbv7em-none-eabi
+        - thumbv7em-none-eabihf
+        - thumbv8m.base-none-eabi
+        - thumbv8m.main-none-eabi
+        - thumbv8m.main-none-eabihf
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        name: libthreadx-sys-crate
+    - run: tar --strip-components=1 -xvf libthreadx-sys.crate && ls -al
+    - run: rustup toolchain install stable --no-self-update --profile minimal --target ${{ matrix.target }}
+    - run: sudo apt-get update && sudo apt-get install gcc-arm-none-eabi qemu-system-arm
+    - run: cargo run --release --example=demo_threadx --target=${{ matrix.target }}
+    - run: cargo clean && rm -r threadx && ls -al
+    - uses: actions/download-artifact@v4
+      with:
+        name: libthreadx-${{ matrix.target }}
+        path: libthreadx-${{ matrix.target }}
+    - run: cargo run --release --example=demo_threadx --target=${{ matrix.target }} --config .cargo/prebuilt.toml
+
+  release:
+    name: Release to GitHub
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs:
+    - check-docs-rs
+    - create-source-package
+    - create-libthreadx-archives
+    - test-source-package
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+        ref: ${{ inputs.tag || github.ref }}
+    - uses: actions/download-artifact@v4
+    - run: ls -al
+    - run: tar -czvf libthreadx-sys.tar.gz libthreadx-*
+    - run: gh release create ${{ inputs.tag }} 'libthreadx-sys.tar.gz#Prebuilt archives, crate' --verify-tag --notes-from-tag
+      env:
+        GH_TOKEN: ${{ github.token }}

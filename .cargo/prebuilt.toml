@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: Copyright 2024 Ian McIntyre
+
+# This Cargo configuration file helps you link against pre-built
+# ThreadX libraries.
+#
+# You'll need a pre-built ThreadX library. You can acquire them from
+# the libthreadx-sys project, or you can bring your own library. If
+# you're bringing your own, you may need to change linker search paths
+# and artifact names; the paths and names used below assume you're
+# using pre-built artifacts from the libthreadx-sys project.
+
+[target.thumbv6m-none-eabi.threadx]
+rustc-link-lib = ["threadx-thumbv6m-none-eabi"]
+rustc-link-search = ["libthreadx-thumbv6m-none-eabi"]
+
+[target.thumbv7m-none-eabi.threadx]
+rustc-link-lib = ["threadx-thumbv7m-none-eabi"]
+rustc-link-search = ["libthreadx-thumbv7m-none-eabi"]
+
+[target.thumbv7em-none-eabi.threadx]
+rustc-link-lib = ["threadx-thumbv7em-none-eabi"]
+rustc-link-search = ["libthreadx-thumbv7em-none-eabi"]
+
+[target.thumbv7em-none-eabihf.threadx]
+rustc-link-lib = ["threadx-thumbv7em-none-eabihf"]
+rustc-link-search = ["libthreadx-thumbv7em-none-eabihf"]
+
+[target.thumbv8m.base-none-eabi.threadx]
+rustc-link-lib = ["threadx-thumbv8m.base-none-eabi"]
+rustc-link-search = ["libthreadx-thumbv8m.base-none-eabi"]
+
+[target.thumbv8m.main-none-eabi.threadx]
+rustc-link-lib = ["threadx-thumbv8m.main-none-eabi"]
+rustc-link-search = ["libthreadx-thumbv8m.main-none-eabi"]
+
+[target.thumbv8m.main-none-eabihf.threadx]
+rustc-link-lib = ["threadx-thumbv8m.main-none-eabihf"]
+rustc-link-search = ["libthreadx-thumbv8m.main-none-eabihf"]
+
+[target.x86_64-unknown-linux-gnu.threadx]
+rustc-link-lib = ["threadx-x86_64-unknown-linux-gnu"]
+rustc-link-search = ["libthreadx-x86_64-unknown-linux-gnu"]

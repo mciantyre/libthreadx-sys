@@ -1,0 +1,93 @@
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: Copyright 2024 Ian McIntyre
+
+[package]
+name = "libthreadx-sys"
+version = "0.1.0"
+edition = "2021"
+links = "threadx"
+license = "MIT"
+readme = "README.md"
+rust-version = "1.82"
+
+include = [
+    # The usual Rust package contents.
+    "/src",
+    "/tests",
+    "/examples",
+    "/build.rs",
+    "/LICENSE",
+    "/README.md",
+
+    # Helpful configurations for builds.
+    "/.cargo",
+
+    # ThreadX contents, supporting only what we need.
+    # (It's not perfect right now, but it's slimmer
+    # than what would be included by default.)
+    "/threadx/common",
+    "/threadx/ports_arch/ARMv*-M/threadx/gnu",
+    "/threadx/ports_arch/ARMv*-M/threadx/inc",
+
+    "/threadx/ports/cortex_m*/gnu",
+    "/threadx/ports/linux/gnu",
+    "/threadx/ports/win32/vs_2019",
+
+    "/threadx/README.md",
+    "/threadx/LICENSE.txt",
+    "/threadx/CONTRIBUTING.md",
+    "/threadx/SECURITY.md",
+]
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[build-dependencies]
+cc = { version = "1.1.5", features = ["parallel"] }
+
+[dev-dependencies]
+portable-atomic = { version = "1.7", default-features = false, features = [
+    "require-cas",
+] }
+
+[target.'cfg(all(target_os = "none", target_arch = "arm"))'.dev-dependencies]
+cortex-m = { version = "0.7" }
+cortex-m-rt = { version = "0.7" }
+cortex-m-semihosting = "0.5"
+panic-semihosting = { version = "0.6", features = ["exit"] }
+lm3s6965 = "0.2"
+
+[target.'thumbv6m-none-eabi'.dev-dependencies]
+portable-atomic = { version = "1.7", default-features = false, features = [
+    "unsafe-assume-single-core",
+] }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [
+    # Performance info configurations.
+    'cfg(tx_block_pool_enable_performance_info)',
+    'cfg(tx_byte_pool_enable_performance_info)',
+    'cfg(tx_event_flags_enable_performance_info)',
+    'cfg(tx_mutex_enable_performance_info)',
+    'cfg(tx_queue_enable_performance_info)',
+    'cfg(tx_semaphore_enable_performance_info)',
+    'cfg(tx_thread_enable_performance_info)',
+    'cfg(tx_timer_enable_performance_info)',
+    # Disable notification callbacks
+    'cfg(tx_disable_notify_callbacks)',
+] }
+
+[profile.release]
+opt-level = "s"
+
+[package.metadata.docs.rs]
+default-target = "x86_64-unknown-linux-gnu"
+targets = [
+    "thumbv6m-none-eabi",
+    "thumbv7m-none-eabi",
+    "thumbv7em-none-eabi",
+    "thumbv7em-none-eabihf",
+    "thumbv8m.base-none-eabi",
+    "thumbv8m.main-none-eabi",
+    "thumbv8m.main-none-eabihf",
+]
