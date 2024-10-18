@@ -9,6 +9,8 @@ links = "threadx"
 license = "MIT"
 readme = "README.md"
 rust-version = "1.82"
+repository = "https://github.com/mciantyre/libthreadx-sys"
+description = "ThreadX bindings"
 publish = false
 
 include = [
