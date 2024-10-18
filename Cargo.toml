@@ -9,6 +9,7 @@ links = "threadx"
 license = "MIT"
 readme = "README.md"
 rust-version = "1.82"
+publish = false
 
 include = [
     # The usual Rust package contents.
