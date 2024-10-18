@@ -19,6 +19,7 @@ include = [
     "/build.rs",
     "/LICENSE",
     "/README.md",
+    "/CHANGELOG.md",
 
     # Helpful configurations for builds.
     "/.cargo",
