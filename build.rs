@@ -136,6 +136,13 @@ fn main() -> Result<(), Error> {
         bld.file(src?.path());
     }
 
+    let out = PathBuf::from(env::var("OUT_DIR")?);
+    fs::copy("threadx/common/inc/tx_api.h", out.join("tx_api.h"))?;
+    fs::copy(port.include_path().join("tx_port.h"), out.join("tx_port.h"))?;
+
+    println!("cargo::metadata=common_include={}", out.display());
+    println!("cargo::metadata=port_include={}", out.display());
+
     bld.compile("threadx");
     Ok(())
 }

@@ -13,31 +13,47 @@
 [target.thumbv6m-none-eabi.threadx]
 rustc-link-lib = ["threadx-thumbv6m-none-eabi"]
 rustc-link-search = ["libthreadx-thumbv6m-none-eabi"]
+common_include = "libthreadx-thumbv6m-none-eabi"
+port_include = "libthreadx-thumbv6m-none-eabi"
 
 [target.thumbv7m-none-eabi.threadx]
 rustc-link-lib = ["threadx-thumbv7m-none-eabi"]
 rustc-link-search = ["libthreadx-thumbv7m-none-eabi"]
+common_include = "libthreadx-thumbv7m-none-eabi"
+port_include = "libthreadx-thumbv7m-none-eabi"
 
 [target.thumbv7em-none-eabi.threadx]
 rustc-link-lib = ["threadx-thumbv7em-none-eabi"]
 rustc-link-search = ["libthreadx-thumbv7em-none-eabi"]
+common_include = "libthreadx-thumbv7em-none-eabi"
+port_include = "libthreadx-thumbv7em-none-eabi"
 
 [target.thumbv7em-none-eabihf.threadx]
 rustc-link-lib = ["threadx-thumbv7em-none-eabihf"]
 rustc-link-search = ["libthreadx-thumbv7em-none-eabihf"]
+common_include = "libthreadx-thumbv7em-none-eabihf"
+port_include = "libthreadx-thumbv7em-none-eabihf"
 
 [target.thumbv8m.base-none-eabi.threadx]
 rustc-link-lib = ["threadx-thumbv8m.base-none-eabi"]
 rustc-link-search = ["libthreadx-thumbv8m.base-none-eabi"]
+common_include = "libthreadx-thumbv8m.base-none-eabi"
+port_include = "libthreadx-thumbv8m.base-none-eabi"
 
 [target.thumbv8m.main-none-eabi.threadx]
 rustc-link-lib = ["threadx-thumbv8m.main-none-eabi"]
 rustc-link-search = ["libthreadx-thumbv8m.main-none-eabi"]
+common_include = "libthreadx-thumbv8m.main-none-eabi"
+port_include = "libthreadx-thumbv8m.main-none-eabi"
 
 [target.thumbv8m.main-none-eabihf.threadx]
 rustc-link-lib = ["threadx-thumbv8m.main-none-eabihf"]
 rustc-link-search = ["libthreadx-thumbv8m.main-none-eabihf"]
+common_include = "libthreadx-thumbv8m.main-none-eabihf"
+port_include = "libthreadx-thumbv8m.main-none-eabihf"
 
 [target.x86_64-unknown-linux-gnu.threadx]
 rustc-link-lib = ["threadx-x86_64-unknown-linux-gnu"]
 rustc-link-search = ["libthreadx-x86_64-unknown-linux-gnu"]
+common_include = "libthreadx-x86_64-unknown-linux-gnu"
+port_include = "libthreadx-x86_64-unknown-linux-gnu"

@@ -5,7 +5,7 @@ name: Continuous integration and package release
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, trying ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -237,10 +237,14 @@ jobs:
     - run: sudo apt-get update && sudo apt-get install gcc-arm-none-eabi
     - run: cargo build --release --target=${{ matrix.target }}
     - run: mv target/${{ matrix.target }}/release/build/libthreadx-sys-*/out/libthreadx.a libthreadx-${{ matrix.target }}.a
+    - run: mv target/${{ matrix.target }}/release/build/libthreadx-sys-*/out/tx_*.h .
     - uses: actions/upload-artifact@v4
       with:
         name: libthreadx-${{ matrix.target }}
-        path: libthreadx-${{ matrix.target }}.a
+        path: |
+          libthreadx-${{ matrix.target }}.a
+          tx_api.h
+          tx_port.h
         if-no-files-found: error
         retention-days: 1
 

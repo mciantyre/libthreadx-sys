@@ -119,6 +119,26 @@ configuration will enable the ThreadX `TX_DISABLE_NOTIFY_CALLBACKS` definition.
 If you're referencing a pre-built ThreadX library, then you must specify the
 configuration yourself.
 
+## Build script outputs
+
+If the libthreadx-sys build script executes, it sets metadata that can be used
+by immediate dependencies. Dependents access this metadata through environment
+variables. See the [`links` manifest key][cargo-links] documentation for more
+information.
+
+This section documents the environment variables and their interpretation.
+
+- `DEP_THREADX_COMMON_INCLUDE` is a path to a directory containing `tx_api.h`.
+  Consider using this as an include path if you're compiling C code.
+- `DEP_THREADX_PORT_INCLUDE` is a path to a directory containing `tx_port.h`.
+  The contents of the header vary by port. Consider using this as an include
+  path if you're compiling C code.
+
+If you're [overriding the build script][build-script-override], you're
+encouraged to set this same metadata in your override configuration.
+
+[cargo-links]: https://doc.rust-lang.org/cargo/reference/build-scripts.html#the-links-manifest-key
+
 ## Alternatives
 
 libthreadx-sys is not the only ThreadX Rust binding project. Check out
