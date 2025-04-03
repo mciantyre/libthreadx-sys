@@ -126,13 +126,16 @@ by immediate dependencies. Dependents access this metadata through environment
 variables. See the [`links` manifest key][cargo-links] documentation for more
 information.
 
-This section documents the environment variables and their interpretation.
+`DEP_THREADX_COMMON_INCLUDE` is a path to a directory containing `tx_api.h`.
+Consider using this as an include path if you're compiling C code.
 
-- `DEP_THREADX_COMMON_INCLUDE` is a path to a directory containing `tx_api.h`.
-  Consider using this as an include path if you're compiling C code.
-- `DEP_THREADX_PORT_INCLUDE` is a path to a directory containing `tx_port.h`.
-  The contents of the header vary by port. Consider using this as an include
-  path if you're compiling C code.
+`DEP_THREADX_PORT_INCLUDE` is a path to a directory containing `tx_port.h`.
+The contents of the header vary by port. Consider using this as an include
+path if you're compiling C code.
+
+`DEP_THREADX_PORT` is the specific port selected for the build. It's selected
+by checking the build target. For example, the port could be `"cortex_m3"` when
+building for an ARMv7-M target.
 
 If you're [overriding the build script][build-script-override], you're
 encouraged to set this same metadata in your override configuration.

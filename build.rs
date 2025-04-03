@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: Copyright 2024 Ian McIntyre
 
-use std::{collections::HashMap, env, fs, path::PathBuf};
+use std::{
+    collections::HashMap,
+    env, fs,
+    path::{Path, PathBuf},
+};
 
 type Error = Box<dyn std::error::Error>;
 
@@ -10,6 +14,7 @@ type Error = Box<dyn std::error::Error>;
 enum Port {
     Armv6m,
     Armv7m,
+    Armv7em,
     Armv8mBase,
     Armv8mMain,
     Linux,
@@ -17,26 +22,37 @@ enum Port {
 }
 
 impl Port {
-    fn source_path(&self) -> PathBuf {
+    fn concrete(&self) -> &'static str {
         match self {
-            Self::Armv6m => "threadx/ports/cortex_m0/gnu/src".into(),
-            Self::Armv7m => "threadx/ports_arch/ARMv7-M/threadx/gnu/src".into(),
-            Self::Armv8mBase => "threadx/ports/cortex_m23/gnu/src".into(),
-            Self::Armv8mMain => "threadx/ports/cortex_m33/gnu/src".into(),
-            Self::Linux => "threadx/ports/linux/gnu/src".into(),
-            Self::Win32 => "threadx/ports/win32/vs_2019/src".into(),
+            Self::Armv6m => "cortex_m0",
+            Self::Armv7m => "cortex_m3",
+            Self::Armv7em => "cortex_m4",
+            Self::Armv8mBase => "cortex_m23",
+            Self::Armv8mMain => "cortex_m33",
+            Self::Linux => "linux",
+            Self::Win32 => "win32",
         }
+    }
+
+    fn path(&self) -> &'static Path {
+        Path::new(match self {
+            Self::Armv6m => "ports/cortex_m0/gnu",
+            Self::Armv7m => "ports/cortex_m3/gnu",
+            Self::Armv7em => "ports/cortex_m4/gnu",
+            Self::Armv8mBase => "ports/cortex_m23/gnu",
+            Self::Armv8mMain => "ports/cortex_m33/gnu",
+            Self::Linux => "ports/linux/gnu",
+            Self::Win32 => "ports/win32/vs_2019",
+        })
+    }
+
+    fn source_path(&self) -> PathBuf {
+        Path::new("threadx").join(self.path()).join("src")
     }
     fn include_path(&self) -> PathBuf {
-        match self {
-            Self::Armv6m => "threadx/ports/cortex_m0/gnu/inc".into(),
-            Self::Armv7m => "threadx/ports_arch/ARMv7-M/threadx/inc".into(),
-            Self::Armv8mBase => "threadx/ports/cortex_m23/gnu/inc".into(),
-            Self::Armv8mMain => "threadx/ports/cortex_m33/gnu/inc".into(),
-            Self::Linux => "threadx/ports/linux/gnu/inc".into(),
-            Self::Win32 => "threadx/ports/win32/vs_2019/inc".into(),
-        }
+        Path::new("threadx").join(self.path()).join("inc")
     }
+
     fn set_defines(&self, bld: &mut cc::Build) {
         match self {
             Self::Armv8mBase | Self::Armv8mMain => {
@@ -63,7 +79,10 @@ fn estimate_threadx_port(host: &str, target: &str) -> Port {
         }
     }
 
-    if target.starts_with("thumbv7m") || target.starts_with("thumbv7em") {
+    if target.starts_with("thumbv7em") {
+        return Port::Armv7em;
+    }
+    if target.starts_with("thumbv7m") {
         return Port::Armv7m;
     }
     if target.starts_with("thumbv6m") {
@@ -142,6 +161,7 @@ fn main() -> Result<(), Error> {
 
     println!("cargo::metadata=common_include={}", out.display());
     println!("cargo::metadata=port_include={}", out.display());
+    println!("cargo::metadata=port={}", port.concrete());
 
     bld.compile("threadx");
     Ok(())
