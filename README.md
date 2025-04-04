@@ -126,8 +126,9 @@ by immediate dependencies. Dependents access this metadata through environment
 variables. See the [`links` manifest key][cargo-links] documentation for more
 information.
 
-`DEP_THREADX_COMMON_INCLUDE` is a path to a directory containing `tx_api.h`.
-Consider using this as an include path if you're compiling C code.
+`DEP_THREADX_COMMON_INCLUDE` is a path to a directory containing `tx_api.h` and
+all other common headers. Consider using this as an include path if you're
+compiling C code.
 
 `DEP_THREADX_PORT_INCLUDE` is a path to a directory containing `tx_port.h`.
 The contents of the header vary by port. Consider using this as an include

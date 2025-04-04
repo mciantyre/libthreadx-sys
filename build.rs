@@ -156,11 +156,24 @@ fn main() -> Result<(), Error> {
     }
 
     let out = PathBuf::from(env::var("OUT_DIR")?);
-    fs::copy("threadx/common/inc/tx_api.h", out.join("tx_api.h"))?;
-    fs::copy(port.include_path().join("tx_port.h"), out.join("tx_port.h"))?;
+    let common_out = out.join("common");
+    fs::create_dir_all(&common_out)?;
 
-    println!("cargo::metadata=common_include={}", out.display());
-    println!("cargo::metadata=port_include={}", out.display());
+    for inc in fs::read_dir("threadx/common/inc")? {
+        let from = inc?.path();
+        let to = common_out.join(from.file_name().unwrap());
+        fs::copy(&from, &to)?;
+    }
+
+    let port_out = out.join("ports");
+    fs::create_dir_all(&port_out)?;
+    fs::copy(
+        port.include_path().join("tx_port.h"),
+        port_out.join("tx_port.h"),
+    )?;
+
+    println!("cargo::metadata=common_include={}", common_out.display());
+    println!("cargo::metadata=port_include={}", port_out.display());
     println!("cargo::metadata=port={}", port.concrete());
 
     bld.compile("threadx");
