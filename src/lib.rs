@@ -39,9 +39,9 @@
 )]
 
 mod port {
-    #[cfg(all(target_arch = "arm", target_os = "none"))]
+    #[cfg(all(target_arch = "arm", any(target_os = "none", target_os = "threadx")))]
     mod armvxm;
-    #[cfg(all(target_arch = "arm", target_os = "none"))]
+    #[cfg(all(target_arch = "arm", any(target_os = "none", target_os = "threadx")))]
     pub use armvxm::*;
 
     #[cfg(unix)]
