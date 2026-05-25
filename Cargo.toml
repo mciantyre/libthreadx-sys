@@ -47,7 +47,7 @@ include = [
 libc = "0.2"
 
 [build-dependencies]
-cc = { version = "1.1.5", features = ["parallel"] }
+cc = { version = "1.2" }
 
 [dev-dependencies]
 portable-atomic = { version = "1.7", default-features = false, features = [
@@ -65,6 +65,14 @@ lm3s6965 = "0.2"
 portable-atomic = { version = "1.7", default-features = false, features = [
     "unsafe-assume-single-core",
 ] }
+
+[dependencies.core]
+optional = true
+package = "rustc-std-workspace-core"
+version = "1.0.0"
+
+[features]
+rustc-dep-of-std = ["core"]
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = [
