@@ -145,6 +145,18 @@ fn main() -> Result<(), Error> {
     port.set_defines(&mut bld);
     set_cfg_defines(&mut bld);
 
+    // HACK(mciantyre): thumbv7em-threadx-eabihf builds are PIC.
+    // Force them to use static relocations. This should probably
+    // change in cc or the Rust compiler, but until I look into
+    // that, we can force it here. (This wouldn't hurt to keep all
+    // the time.)
+    match port {
+        Port::Armv6m | Port::Armv7m | Port::Armv7em | Port::Armv8mBase | Port::Armv8mMain => {
+            bld.pic(false);
+        }
+        Port::Linux | Port::Win32 => {}
+    }
+
     bld.include("threadx/common/inc");
     for src in fs::read_dir("threadx/common/src")? {
         bld.file(src?.path());
