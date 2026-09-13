@@ -4,11 +4,12 @@ libthreadx-sys provides Rust bindings for [ThreadX][threadx], the real-time
 operating system (RTOS). The package can build ThreadX for various host and MCU
 ports. You can also use this package along with your pre-built ThreadX library.
 
-For usage information, see the API documentation. The rest of this README
+For usage information, see [the API documentation][docs]. The rest of this README
 describes how to use this package in your project and how to customize the
 build.
 
 [threadx]: https://github.com/eclipse-threadx/threadx
+[docs]: https://mciantyre.github.io/libthreadx-sys/
 
 ## Usage
 
